@@ -1,70 +1,71 @@
-# Getting Started with Create React App
+# Resume Reviewer — Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Project Overview
+An AI-powered resume reviewer that scores resumes against California Community College standards. Users create an account, log in, upload a resume, and receive an AI-generated score and feedback. All past reviews are saved and accessible from the user's dashboard.
 
-## Available Scripts
+## Full Stack
+| Layer | Technology |
+|---|---|
+| Frontend | React |
+| Backend | Node.js / Express |
+| Database | PostgreSQL (AWS RDS) |
+| File Storage | AWS S3 |
+| AI | AWS Bedrock (Claude) |
+| Frontend Hosting | AWS Amplify |
+| Backend Hosting | AWS Elastic Beanstalk |
 
-In the project directory, you can run:
+## What the Frontend Owns
+- All UI and user-facing pages
+- Routing between pages
+- Auth state (storing JWT token, protecting routes)
+- Sending resume files to the backend via multipart form
+- Displaying AI results returned from the backend
+- Displaying review history
 
-### `npm start`
+## Pages
+- `/register` — create a new account (username + password, no OAuth)
+- `/login` — log in, receives a JWT token from the backend
+- `/dashboard` — shows the upload form and the user's past reviews
+- `/review/:id` — shows the full result for a specific review
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## API Contract
+The frontend talks to the backend via REST. Base URL is stored in an environment variable `REACT_APP_API_URL`.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/auth/register` | Register a new user |
+| POST | `/auth/login` | Log in, returns JWT |
+| POST | `/reviews` | Upload a resume (multipart/form-data) |
+| GET | `/reviews` | Get all reviews for logged in user |
+| GET | `/reviews/:id` | Get a single review result |
 
-### `npm test`
+All requests except register and login require an `Authorization: Bearer <token>` header.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Auth
+- On login the backend returns a JWT token
+- Store the token in memory or localStorage
+- Attach it to every protected request as a Bearer token
+- If a request returns 401 redirect the user to `/login`
 
-### `npm run build`
+## Resume Upload
+- Accept PDF, DOCX, and TXT files only
+- Send as `multipart/form-data` with the field name `resume`
+- Show a loading state while the backend processes — the AI call may take a few seconds
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Review Result Shape
+The backend returns a JSON object after processing. The exact scoring structure is TBD but will include at minimum:
+- `overall_score` — integer 0–100
+- `overall_summary` — string
+- `feedback` — array of category results, each with a score and explanation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Environment Variables
+```
+REACT_APP_API_URL=http://localhost:5000
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Local Development
+```bash
+npm install
+npm start
+```
+Runs on `http://localhost:3000`. Expects the backend running on port 5000.
