@@ -2,31 +2,38 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { login as apiLogin } from "../services/client";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setLoading(true);
+    
     try {
       // TODO: call login API and pass returned token to auth context
-      // const { token } = await apiLogin({ username, password });
-      // login(token);
-      // navigate('/dashboard');
-      setError('Backend not yet connected.');
+      const { token } = await apiLogin({ username, password });
+      login(token);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <div>
       <h1>Login</h1>
+    
       <form onSubmit={handleSubmit}>
         <div>
           <label>Username</label>
@@ -37,6 +44,7 @@ export default function Login() {
             required
           />
         </div>
+              
         <div>
           <label>Password</label>
           <input
@@ -46,9 +54,14 @@ export default function Login() {
             required
           />
         </div>
+  
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit">Log In</button>
+          
+        <button type="submit" disabled={loading}>
+        {loading ? "Logging in..." : "Logged In"}
+          </button>
       </form>
+            
       <p>
         Don't have an account? <Link to="/register">Register</Link>
       </p>
