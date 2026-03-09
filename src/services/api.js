@@ -1,10 +1,35 @@
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-// Helper to build headers with optional auth token
-function headers(token) {
-  const h = { 'Content-Type': 'application/json' };
-  if (token) h['Authorization'] = `Bearer ${token}`;
+// Helper to build headers with optional auth token (JSON requests only)
+function jsonHeaders(token) {
+  const h = { "Content-Type": "application/json" };
+  if (token) h["Authorization"] = `Bearer ${token}`;
   return h;
+}
+
+// Helper to handle responses consistently
+async function handleResponse(res) {
+  const text = await res.text();
+  let data;
+
+  try {
+    data = text? JSON.parse(text) : null;
+  } catch {
+    data = text; // fallback if not JSON
+  }
+
+  if (!res.ok) {
+    const msg =
+      (data && data.message) ||
+      (typeof data === "string" && data) ||
+      `Request failed with status ${res.status}`;
+    const err = new Error(msg);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+
+  return data;
 }
 
 // ──────────────────────────────────────────
@@ -16,8 +41,13 @@ function headers(token) {
  * @param {{ username: string, password: string }} credentials
  */
 export async function register(credentials) {
-  // TODO: implement when backend is ready
-  throw new Error('Not implemented');
+  const res = await fetch(`${BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: jsonHeaders(),
+    body: JSON.stringify(credentials),
+  });
+
+  return handleResponse(res);
 }
 
 /**
@@ -26,8 +56,13 @@ export async function register(credentials) {
  * @returns {Promise<{ token: string }>}
  */
 export async function login(credentials) {
-  // TODO: implement when backend is ready
-  throw new Error('Not implemented');
+  const res = await fetch(`${BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: jsonHeaders(),
+    body: JSON.stringify(credentials),
+  });
+
+  return handleResponse(res);
 }
 
 // ──────────────────────────────────────────
@@ -42,8 +77,16 @@ export async function login(credentials) {
  * @returns {Promise<object>} review result
  */
 export async function uploadResume(file, token) {
-  // TODO: implement when S3 / Bedrock are ready
-  throw new Error('Not implemented');
+  const formData = new FormData();
+  formData.append("resume", file); // MUST be "resume"
+
+  const res = await fetch(`${BASE_URL}/reviews`, {
+    method: "POST",
+    headers: token? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  });
+
+  return handleResponse(res);
 }
 
 /**
@@ -53,8 +96,12 @@ export async function uploadResume(file, token) {
  * @returns {Promise<object[]>}
  */
 export async function getReviews(token) {
-  // TODO: implement when backend is ready
-  throw new Error('Not implemented');
+  const res = await fetch(`${BASE_URL}/reviews`, {
+    method: "GET",
+    headers: jsonHeaders(token),
+  });
+
+  return handleResponse(res);
 }
 
 /**
@@ -65,6 +112,10 @@ export async function getReviews(token) {
  * @returns {Promise<object>}
  */
 export async function getReview(id, token) {
-  // TODO: implement when backend is ready
-  throw new Error('Not implemented');
+  const res = await fetch(`${BASE_URL}/reviews/${id}`, {
+    method: "GET",
+    headers: jsonHeaders(token),
+  });
+
+  return handleResponse(res);
 }
